@@ -1,0 +1,2 @@
+#!/bin/sh
+exec @PYTHON@ @UI_SCRIPT@ "$@"
