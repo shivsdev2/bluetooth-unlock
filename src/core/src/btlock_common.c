@@ -1,7 +1,5 @@
 /*
  * btlock_common.c - Common utilities implementation
- *
- * Copyright (C) 2025 btlock contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 

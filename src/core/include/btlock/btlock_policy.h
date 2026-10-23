@@ -1,7 +1,5 @@
 /*
  * btlock_policy.h - Policy engine API
- *
- * Copyright (C) 2025 btlock contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * The policy engine evaluates the collective state of multiple tracked

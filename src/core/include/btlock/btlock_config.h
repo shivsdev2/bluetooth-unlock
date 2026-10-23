@@ -1,7 +1,5 @@
 /*
  * btlock_config.h - Configuration schema and validation for btlock
- *
- * Copyright (C) 2025 btlock contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Defines the configuration structure, default values, validation

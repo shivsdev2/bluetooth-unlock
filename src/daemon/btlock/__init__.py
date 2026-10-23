@@ -13,6 +13,6 @@ This package provides:
 """
 
 __version__ = "0.1.0"
-__all__ = ["config", "state_bridge", "bluez_monitor", "desktop_adapter",
-           "daemon", "dbus_service"]
+__all__ = ["config", "state_bridge", "bluez_monitor",
+           "desktop_adapter", "dbus_service"]
 

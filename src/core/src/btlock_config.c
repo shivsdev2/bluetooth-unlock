@@ -1,7 +1,5 @@
 /*
  * btlock_config.c - Configuration defaults and validation
- *
- * Copyright (C) 2025 btlock contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 

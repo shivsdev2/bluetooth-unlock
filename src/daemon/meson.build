@@ -9,6 +9,7 @@ daemon_sources = [
   'btlock/bluez_monitor.py',
   'btlock/desktop_adapter.py',
   'btlock/state_bridge.py',
+  'btlock/dbus_service.py',
 ]
 
 # Install the daemon package

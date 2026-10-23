@@ -1,7 +1,5 @@
 /*
  * btlock_filter.h - RSSI signal filtering API
- *
- * Copyright (C) 2025 btlock contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Provides filtering of noisy RSSI readings. Bluetooth signal strength

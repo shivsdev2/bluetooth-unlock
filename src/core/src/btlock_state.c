@@ -1,7 +1,5 @@
 /*
  * btlock_state.c - Proximity state machine implementation
- *
- * Copyright (C) 2025 btlock contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Implements the deterministic finite state machine that decides
@@ -252,6 +250,7 @@ static void handle_device_found(BtlockStateMachine *sm, const BtlockDevice *devi
   }
 
   if (sm->state != BTLOCK_STATE_DEVICE_PRESENT &&
+      sm->state != BTLOCK_STATE_DISCOVERING &&
       sm->state != BTLOCK_STATE_UNINITIALIZED) {
     sm_set_state(sm, BTLOCK_STATE_DEVICE_PRESENT, "device present");
   }
@@ -340,7 +339,7 @@ btlock_state_machine_process_event(BtlockStateMachine *sm,
   BtlockEventResult result = {
     .action = BTLOCK_ACTION_NONE,
     .state_changed = FALSE,
-    .new_state = BTLOCK_STATE_UNINITIALIZED,
+    .new_state = sm->state,
   };
 
   if (!sm)

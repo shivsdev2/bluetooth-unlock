@@ -1,7 +1,5 @@
 /*
  * btlock_policy.c - Policy engine implementation
- *
- * Copyright (C) 2025 btlock contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * The policy engine tracks multiple Bluetooth devices, applies
@@ -36,10 +34,8 @@ static BtlockPolicyDevice *find_device(BtlockPolicyEngine *engine, const char *a
 
 static BtlockPolicyDevice *find_free_slot(BtlockPolicyEngine *engine)
 {
-  if (engine->device_count < MAX_POLICY_DEVICES) {
-    engine->device_count++;
-    return &engine->devices[engine->device_count - 1];
-  }
+  if (engine->device_count < MAX_POLICY_DEVICES)
+    return &engine->devices[engine->device_count];
   return NULL;
 }
 
@@ -110,9 +106,9 @@ BtlockPolicyDevice *btlock_policy_engine_update_device(
   }
 
   /* Update device identity */
-  g_snprintf(dev->device.address, BTLOCK_ADDR_MAX, "%s", address);
+  g_strlcpy(dev->device.address, address, BTLOCK_ADDR_MAX);
   if (name)
-    g_snprintf(dev->device.name, BTLOCK_NAME_MAX, "%s", name);
+    g_strlcpy(dev->device.name, name, BTLOCK_NAME_MAX);
   dev->enrolled = is_trusted;
   dev->device.last_seen_ms = monotonic_now_ms;
 
@@ -150,7 +146,7 @@ void btlock_policy_engine_mark_absent(BtlockPolicyEngine *engine,
     return;
   dev->is_present = FALSE;
   dev->absent_count++;
-  dev->last_absent_ms = monotonic_now_ms;
+    dev->last_absent_ms = monotonic_now_ms;
   dev->device.last_seen_ms = monotonic_now_ms;
 }
 
