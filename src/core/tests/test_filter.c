@@ -72,7 +72,9 @@ static gboolean test_empty_filter(void)
 static gboolean test_invalid_rssi_rejected(void)
 {
   BtlockFilter *f = btlock_filter_new(BTLOCK_FILTER_MOVING_AVERAGE, 5);
-  ASSERT(btlock_filter_add_sample(f, -200, 1000) == FALSE, "invalid RSSI rejected");
+    /* Test with int8_t that overflows when negative */
+  int8_t invalid_rssi = (int8_t)-200;
+  ASSERT(btlock_filter_add_sample(f, invalid_rssi, 1000) == FALSE, "invalid RSSI rejected");
   ASSERT(btlock_filter_add_sample(f, -60, 1000) == TRUE, "valid RSSI accepted");
   ASSERT(btlock_filter_add_sample(f, -60, 1000) == FALSE, "dup timestamp rejected");
   ASSERT(btlock_filter_get_count(f) == 1, "should have 1 sample");

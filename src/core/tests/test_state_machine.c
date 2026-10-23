@@ -82,8 +82,13 @@ static gboolean test_device_lost_zero_grace(void)
   btlock_state_machine_process_event(sm, BTLOCK_EVENT_DEVICE_FOUND, &dev, 2000);
   BtlockEventResult result = btlock_state_machine_process_event(
       sm, BTLOCK_EVENT_DEVICE_LOST, NULL, 3000);
+  ASSERT(btlock_state_machine_get_state(sm) == BTLOCK_STATE_DEPARTURE_GRACE,
+         "should be in grace with 0 grace");
+  /* With 0 grace, tick immediately triggers lock */
+  result = btlock_state_machine_process_event(
+      sm, BTLOCK_EVENT_TICK, NULL, 3001);
   ASSERT(btlock_state_machine_get_state(sm) == BTLOCK_STATE_LOCK_REQUESTED,
-         "should be LOCK_REQUESTED with 0 grace");
+         "should be LOCK_REQUESTED with 0 grace after tick");
   ASSERT(result.action == BTLOCK_ACTION_REQUEST_LOCK, "should request lock");
   btlock_state_machine_free(sm);
   return TRUE;
@@ -204,11 +209,34 @@ static gboolean test_stop_returns_to_uninitialized(void)
   btlock_state_machine_process_event(sm, BTLOCK_EVENT_START, NULL, 0);
   btlock_state_machine_process_event(sm, BTLOCK_EVENT_STOP, NULL, 1000);
   ASSERT(btlock_state_machine_get_state(sm) == BTLOCK_STATE_UNINITIALIZED,
-           btlock_state_machine_process_event(sm, BTLOCK_EVENT_STOP, NULL, 1000);
-  ASSERT(btlock_state_machine_get_state(sm) == BTLOCK_STATE_UNINITIALIZED,
          "stop should return to UNINITIALIZED");
   btlock_state_machine_free(sm);
-    return TRUE;
+  return TRUE;
+}
+
+static gboolean test_min_disconnects_threshold(void)
+{
+  BtlockConfig config;
+  btlock_config_init_defaults(&config);
+  config.min_disconnects = 3;
+  config.lock_grace_ms = 5000;
+  BtlockStateMachine *sm = btlock_state_machine_new(&config);
+  btlock_state_machine_process_event(sm, BTLOCK_EVENT_START, NULL, 0);
+  BtlockDevice dev = {0};
+  strcpy(dev.address, "AA:BB:CC:DD:EE:FF");
+  dev.rssi = -60;
+  btlock_state_machine_process_event(sm, BTLOCK_EVENT_DEVICE_FOUND, &dev, 1000);
+  btlock_state_machine_process_event(sm, BTLOCK_EVENT_DEVICE_LOST, NULL, 2000);
+  ASSERT(btlock_state_machine_get_state(sm) == BTLOCK_STATE_DEVICE_PRESENT,
+         "should stay present after 1 disconnect");
+  btlock_state_machine_process_event(sm, BTLOCK_EVENT_DEVICE_LOST, NULL, 3000);
+  ASSERT(btlock_state_machine_get_state(sm) == BTLOCK_STATE_DEVICE_PRESENT,
+         "should still be present after 2 disconnects");
+  btlock_state_machine_process_event(sm, BTLOCK_EVENT_DEVICE_LOST, NULL, 4000);
+  ASSERT(btlock_state_machine_get_state(sm) == BTLOCK_STATE_DEPARTURE_GRACE,
+         "should enter grace after 3 disconnects");
+  btlock_state_machine_free(sm);
+  return TRUE;
 }
 
 static gboolean test_returning_with_auto_unlock(void)
@@ -278,7 +306,9 @@ static gboolean test_null_machine_safety(void)
   btlock_state_machine_process_event(NULL, BTLOCK_EVENT_START, NULL, 0);
   ASSERT(btlock_state_machine_get_state(NULL) == BTLOCK_STATE_UNINITIALIZED,
          "NULL machine should return UNINITIALIZED");
-    return TRUE;
+  ASSERT(btlock_state_machine_needs_lock(NULL) == FALSE,
+         "NULL machine should not need lock");
+  return TRUE;
 }
 
 static gboolean test_adapter_unavailable(void)
@@ -322,6 +352,7 @@ static gboolean test_lock_failed_retry(void)
   dev.rssi = -60;
   btlock_state_machine_process_event(sm, BTLOCK_EVENT_DEVICE_FOUND, &dev, 1000);
   btlock_state_machine_process_event(sm, BTLOCK_EVENT_DEVICE_LOST, NULL, 2000);
+  btlock_state_machine_process_event(sm, BTLOCK_EVENT_TICK, NULL, 2001);
   ASSERT(btlock_state_machine_get_state(sm) == BTLOCK_STATE_LOCK_REQUESTED,
          "should be LOCK_REQUESTED");
   btlock_state_machine_process_event(sm, BTLOCK_EVENT_LOCK_FAILED, NULL, 2100);
@@ -345,6 +376,7 @@ static TestFunc tests[] = {
   test_bt_unavailable_recovery,
   test_shutdown,
   test_auto_unlock_default_disabled,
+  test_stop_returns_to_uninitialized,
   test_min_disconnects_threshold,
   test_returning_with_auto_unlock,
   test_multi_device_cancel_lock,

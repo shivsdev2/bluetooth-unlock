@@ -114,6 +114,7 @@ static gboolean test_acceptable_boundaries(void)
   config.lock_grace_ms = 0; /* Min allowed */
   config.absent_threshold_dbm = -120; /* Min allowed */
   config.present_threshold_dbm = 0;   /* Max allowed, absent < present */
+  config.return_threshold_dbm = 0;    /* Must be >= present threshold */
   config.rssi_window = 1;
   config.min_disconnects = 1;
   ASSERT(btlock_config_validate(&config, NULL) == BTLOCK_CONFIG_OK,

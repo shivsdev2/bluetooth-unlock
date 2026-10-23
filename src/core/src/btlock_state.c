@@ -252,7 +252,6 @@ static void handle_device_found(BtlockStateMachine *sm, const BtlockDevice *devi
   }
 
   if (sm->state != BTLOCK_STATE_DEVICE_PRESENT &&
-      sm->state != BTLOCK_STATE_DISCOVERING &&
       sm->state != BTLOCK_STATE_UNINITIALIZED) {
     sm_set_state(sm, BTLOCK_STATE_DEVICE_PRESENT, "device present");
   }
@@ -341,7 +340,7 @@ btlock_state_machine_process_event(BtlockStateMachine *sm,
   BtlockEventResult result = {
     .action = BTLOCK_ACTION_NONE,
     .state_changed = FALSE,
-    .new_state = sm->state,
+    .new_state = BTLOCK_STATE_UNINITIALIZED,
   };
 
   if (!sm)

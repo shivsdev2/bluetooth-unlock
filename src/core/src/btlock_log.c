@@ -38,7 +38,7 @@ const char *btlock_log_truncate_address(const char *addr)
   if (s_debug_enabled)
     return addr;
 
-  static char truncated[16]; /* "AA:BB:CC:xx:xx:xx\0" */
+  static char truncated[18]; /* "AA:BB:CC:xx:xx:xx\0" - 17 chars + NUL */
   snprintf(truncated, sizeof(truncated), "%.2s:%.2s:%.2s:xx:xx:xx",
            addr, addr + 3, addr + 6);
   return truncated;
@@ -59,19 +59,6 @@ void btlock_log_init(BtlockLogLevel level, const char *log_file)
 gboolean btlock_log_debug_enabled(void)
 {
   return s_debug_enabled;
-}
-
-static const char *level_to_string(BtlockLogLevel level)
-{
-  switch (level) {
-    case BTLOCK_LOG_ERROR:   return "ERROR";
-    case BTLOCK_LOG_CRITICAL:return "CRITICAL";
-    case BTLOCK_LOG_WARNING: return "WARNING";
-    case BTLOCK_LOG_MESSAGE: return "MESSAGE";
-    case BTLOCK_LOG_INFO:    return "INFO";
-    case BTLOCK_LOG_DEBUG:   return "DEBUG";
-    default:                 return "UNKNOWN";
-  }
 }
 
 void btlock_log(BtlockLogLevel level, BtlockLogCategory cat,

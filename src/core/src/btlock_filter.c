@@ -107,7 +107,7 @@ gboolean btlock_filter_add_sample(BtlockFilter *filter, int8_t rssi,
   if (filter->max_rssi == INT8_MIN || rssi > filter->max_rssi)
     filter->max_rssi = rssi;
 
-    return TRUE;
+  return TRUE;
 }
 
 /*
@@ -211,8 +211,8 @@ void btlock_filter_reset(BtlockFilter *filter)
 
   filter->count = 0;
   filter->head = 0;
-  g_memset(filter->samples, 0, filter->window_size * sizeof(int8_t));
-  g_memset(filter->timestamps, 0, filter->window_size * sizeof(guint64));
+    memset(filter->samples, 0, filter->window_size * sizeof(int8_t));
+  memset(filter->timestamps, 0, filter->window_size * sizeof(guint64));
 }
 
 void btlock_filter_get_stats(const BtlockFilter *filter, BtlockFilterStats *stats)

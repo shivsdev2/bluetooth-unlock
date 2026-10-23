@@ -73,10 +73,9 @@ static gboolean test_device_in_grace(void)
   BtlockPolicyEngine *engine = btlock_policy_engine_new(&config);
   btlock_policy_engine_update_device(engine, "AA:BB:CC:DD:EE:FF", "Phone",
                                       -60, TRUE, 1000);
-  btlock_policy_engine_update_device(engine, "AA:BB:CC:DD:EE:FF", "Phone",
-                                      INT8_MIN, TRUE, 2000);
+  btlock_policy_engine_mark_absent(engine, "AA:BB:CC:DD:EE:FF", 2000);
   BtlockPolicyDecision dec = btlock_policy_engine_evaluate(engine, 5000);
-    ASSERT(dec == BTLOCK_POLICY_IN_GRACE, "should be in grace period");
+  ASSERT(dec == BTLOCK_POLICY_IN_GRACE, "should be in grace period");
   btlock_policy_engine_free(engine);
   return TRUE;
 }
