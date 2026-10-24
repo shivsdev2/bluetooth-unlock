@@ -1,0 +1,14 @@
+[Unit]
+Description=btlock Bluetooth Proximity Locker
+Documentation=https://github.com/btlock/btlock
+After=graphical-session.target bluetooth.service
+Wants=bluetooth.service
+
+[Service]
+Type=simple
+ExecStart=@PYTHON@ @DAEMON_SCRIPT@
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

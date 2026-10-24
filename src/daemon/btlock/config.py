@@ -171,6 +171,11 @@ class BtlockConfig:
                 f"filter_type must be 'median' or 'moving_average'"
             )
 
+    def reload(self) -> None:
+        """Reload configuration from disk, replacing all values."""
+        new_config = load_config()
+        self.__dict__.update(new_config.__dict__)
+
 
 def _is_valid_bt_address(addr: str) -> bool:
     """Validate a Bluetooth MAC address (XX:XX:XX:XX:XX:XX)."""

@@ -29,3 +29,13 @@ configure_file(
   install_dir: get_option('bindir'),
   install_mode: 'rwxr-xr-x',
 )
+
+# Install systemd user service
+systemd_user_dir = get_option('sysconfdir') / 'systemd' / 'user'
+configure_file(
+  input: 'btlockd.service.in',
+  output: 'btlockd.service',
+  configuration: conf,
+  install: true,
+  install_dir: systemd_user_dir,
+)

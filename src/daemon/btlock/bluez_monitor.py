@@ -124,6 +124,11 @@ class BluezMonitor:
             return self._simulate_find_adapter()
 
         try:
+            from gi.repository import Gio
+        except ImportError:
+            return self._simulate_find_adapter()
+
+        try:
             proxy = Gio.DBusProxy.new_sync(
                 self._bus,
                 Gio.DBusProxyFlags.NONE,
@@ -136,7 +141,7 @@ class BluezMonitor:
             objects = proxy.GetManagedObjects()
         except Exception as e:
             logger.error("Failed to get managed objects: %s", e)
-            return False
+            return self._simulate_find_adapter()
 
         for path in sorted(objects.keys()):
             if path.startswith("/org/bluez/hci"):
@@ -149,6 +154,7 @@ class BluezMonitor:
     def _setup_signals(self) -> None:
         """Subscribe to BlueZ PropertiesChanged signals."""
         try:
+            from gi.repository import Gio
             self._bus.signal_subscribe(
                 DBUS_SERVICE_NAME,
                 PROPERTIES_IFACE,
@@ -159,6 +165,7 @@ class BluezMonitor:
                 self._on_properties_changed,
                 None,
             )
+            
         except Exception as e:
             logger.error("Failed to subscribe to D-Bus signals: %s", e)
 
@@ -245,6 +252,7 @@ class BluezMonitor:
     def _do_bluez_scan(self) -> None:
         """Initiate a BLE scan via BlueZ to refresh RSSI."""
         try:
+            from gi.repository import Gio
             adapter = Gio.DBusProxy.new_sync(
                 self._bus,
                 Gio.DBusProxyFlags.NONE,
