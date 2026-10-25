@@ -1,6 +1,6 @@
 [Unit]
 Description=btlock Bluetooth Proximity Locker
-Documentation=https://github.com/btlock/btlock
+Documentation=https://github.com/shivsdev2/bluetooth-unlock/docs
 After=graphical-session.target bluetooth.service
 Wants=bluetooth.service
 

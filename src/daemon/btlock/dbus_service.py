@@ -187,10 +187,11 @@ class BtlockDBusService:
         self,
         connection: object,
         sender: str,
-        path: str,
+        object_path: str,
         interface_name: str,
         method_name: str,
         parameters: object,
+        invocation: object,
         user_data: object,
     ) -> None:
         """Handle incoming D-Bus method calls."""
@@ -226,18 +227,15 @@ class BtlockDBusService:
                 logger.error("ReloadConfig failed: %s", e)
 
         if reply is not None:
-            connection.call_with_unix_fdlist(
-                None,
-                None,
-                None,
-                sender,
-                GLIB_NODE_PATH,
-                "org.freedesktop.DBus",
-                "Method.Return",
-                reply,
-                -1,
-                None,
-            )
+            try:
+                invocation.return_value(reply)
+            except Exception:
+                pass
+        else:
+            try:
+                invocation.return_value(None)
+            except Exception:
+                pass
 
     def _on_get_property(
         self,

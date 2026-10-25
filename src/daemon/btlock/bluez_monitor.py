@@ -80,6 +80,8 @@ class BluezMonitor:
             else "median"
         )
         self._running = False
+        self._discovering = False
+        self._discovery_start_ms: int = 0
 
     def start(self) -> bool:
         """
@@ -119,7 +121,7 @@ class BluezMonitor:
         return True
 
     def _find_adapter(self) -> bool:
-        """Find the first available Bluetooth adapter via ObjectManager."""
+        """Find the first available Bluetooth adapter via D-Bus introspection."""
         if self._bus is None:
             return self._simulate_find_adapter()
 
@@ -128,26 +130,31 @@ class BluezMonitor:
         except ImportError:
             return self._simulate_find_adapter()
 
-        try:
-            proxy = Gio.DBusProxy.new_sync(
-                self._bus,
-                Gio.DBusProxyFlags.NONE,
-                None,
-                DBUS_SERVICE_NAME,
-                "/org/bluez",
-                DBUS_OBJECT_MANAGER,
-                None,
-            )
-            objects = proxy.GetManagedObjects()
-        except Exception as e:
-            logger.error("Failed to get managed objects: %s", e)
-            return self._simulate_find_adapter()
+        import re
 
-        for path in sorted(objects.keys()):
-            if path.startswith("/org/bluez/hci"):
-                self._adapter_path = path
-                logger.debug("Found adapter at %s", path)
-                return True
+        # Check /org/bluez/hci{0..15} for available adapters
+        for i in range(16):
+            path = f"/org/bluez/hci{i}"
+            try:
+                intro = Gio.DBusProxy.new_sync(
+                    self._bus,
+                    Gio.DBusProxyFlags.NONE,
+                    None,
+                    DBUS_SERVICE_NAME,
+                    path,
+                    "org.freedesktop.DBus.Introspectable",
+                    None,
+                )
+                xml = intro.Introspect()
+                ifaces = re.findall(
+                    r'interface name="([^"]+)"', xml
+                )
+                if "org.bluez.Adapter1" in ifaces:
+                    self._adapter_path = path
+                    logger.debug("Found adapter at %s", path)
+                    return True
+            except Exception:
+                continue
 
         return self._simulate_find_adapter()
 
@@ -244,13 +251,24 @@ class BluezMonitor:
         if not self._running:
             return
 
-        if self._bus is not None and self._adapter_path:
+        if (
+            self._bus is not None
+            and self._adapter_path
+            and not self._adapter_path.startswith("simulated:")
+        ):
             self._do_bluez_scan()
         else:
             self._simulate_scan()
 
     def _do_bluez_scan(self) -> None:
-        """Initiate a BLE scan via BlueZ to refresh RSSI."""
+        """Initiate or maintain a BLE scan via BlueZ to refresh RSSI."""
+        now_ms = int(time.monotonic() * 1000)
+
+        if self._discovering:
+            if now_ms - self._discovery_start_ms > 5000:
+                self._stop_discovery()
+            return
+
         try:
             from gi.repository import Gio
             adapter = Gio.DBusProxy.new_sync(
@@ -263,8 +281,31 @@ class BluezMonitor:
                 None,
             )
             adapter.StartDiscovery()
+            self._discovering = True
+            self._discovery_start_ms = now_ms
+            logger.debug("Started BLE discovery")
         except Exception as e:
             logger.debug("Scan request failed: %s", e)
+
+    def _stop_discovery(self) -> None:
+        """Stop ongoing BLE discovery."""
+        try:
+            from gi.repository import Gio
+            adapter = Gio.DBusProxy.new_sync(
+                self._bus,
+                Gio.DBusProxyFlags.NONE,
+                None,
+                DBUS_SERVICE_NAME,
+                self._adapter_path,
+                DBUS_ADAPTER_IFACE,
+                None,
+            )
+            adapter.StopDiscovery()
+            self._discovering = False
+            logger.debug("Stopped BLE discovery")
+        except Exception as e:
+            logger.debug("StopDiscovery failed: %s", e)
+            self._discovering = False
 
     def _simulate_start(self) -> None:
         """Start in simulation mode for testing."""

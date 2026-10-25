@@ -244,8 +244,27 @@ def setup_logging(verbose: bool = False) -> None:
     )
 
 
+def create_default_config() -> None:
+    """Create a default config file at ~/.config/btlock/config.json."""
+    from btlock.config import BtlockConfig, get_config_path, save_config
+
+    config = BtlockConfig()
+    path = get_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    save_config(config, path)
+    print(f"Default config written to: {path}")
+    print(f"Edit it with: nano {path}")
+    print()
+    print("Add your device MAC addresses to 'enrolled_devices'.")
+    print("Find them with: bluetoothctl devices")
+
+
 def main() -> int:
     """Entry point for the btlock daemon."""
+    if "--setup" in sys.argv:
+        create_default_config()
+        return 0
+
     verbose = "-v" in sys.argv or "--verbose" in sys.argv
     setup_logging(verbose)
 
