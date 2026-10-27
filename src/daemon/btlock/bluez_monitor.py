@@ -327,6 +327,9 @@ class BluezMonitor:
         self, address: str, name: str, rssi: int
     ) -> None:
         """Inject a simulated device (testing only)."""
+        if address not in self._config.enrolled_devices:
+            logger.debug("Ignoring non-enrolled device: %s", address)
+            return
         now_ms = int(time.monotonic() * 1000)
         if address not in self._devices:
             self._devices[address] = DeviceInfo(

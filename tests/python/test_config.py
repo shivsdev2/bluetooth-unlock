@@ -4,6 +4,7 @@ import json
 import os
 import tempfile
 import unittest
+from pathlib import Path
 
 from btlock.config import (
     BtlockConfig, ConfigError, DEFAULTS, BOUNDS, load_config,
@@ -127,15 +128,20 @@ class TestConfigFileIO(unittest.TestCase):
 def load_config_from_path(path):
     """Helper: load config from a specific path (for testing)."""
     from pathlib import Path
-    from btlock.config import BtlockConfig
+    import json
+    from btlock.config import BtlockConfig, ConfigError
 
     config_path = Path(path)
     if not config_path.exists():
         return BtlockConfig()
 
-    import json
-    raw = config_path.read_text(encoding="utf-8")
-    data = json.loads(raw)
+    try:
+        raw = config_path.read_text(encoding="utf-8")
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise ConfigError(
+            f"Configuration file is corrupted (invalid JSON): {e}"
+        )
     config = BtlockConfig.from_dict(data)
     config.validate()
     return config

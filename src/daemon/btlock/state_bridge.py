@@ -345,6 +345,29 @@ class NullStateBridge:
             ):
                 self._state = BtlockState.LOCK_REQUESTED
                 action = BtlockAction.REQUEST_LOCK
+            elif (
+                self._state == BtlockState.LOCKING
+                and monotonic_now_ms >= self._grace_end_ms
+            ):
+                self._state = BtlockState.LOCK_FAILED
+
+        elif event == BtlockEvent.LOCK_ACK:
+            if self._state == BtlockState.LOCK_REQUESTED:
+                self._state = BtlockState.LOCKING
+
+        elif event == BtlockEvent.LOCK_CONFIRMED:
+            if self._state in (BtlockState.LOCK_REQUESTED, BtlockState.LOCKING):
+                self._state = BtlockState.LOCKED
+
+        elif event == BtlockEvent.LOCK_FAILED:
+            if self._state in (
+                BtlockState.LOCK_REQUESTED,
+                BtlockState.LOCKING,
+            ):
+                self._state = BtlockState.LOCK_FAILED
+
+        elif event == BtlockEvent.STOP:
+            self._state = BtlockState.SHUTTING_DOWN
 
         state_changed = self._state != old_state
 
